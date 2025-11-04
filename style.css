@@ -1,0 +1,335 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f4f4f9;
+}
+
+h1 {
+    color: #1d3557;
+}
+
+/* 月表示コンテナ */
+.calendar-container {
+    width: 95%;
+    max-width: 900px;
+    margin-bottom: 30px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.calendar-header button {
+    padding: 8px 15px;
+    background-color: #457b9d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#calendar {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* カラム幅を固定 */
+}
+
+#calendar th {
+    text-align: center;
+    padding: 10px 5px;
+    background-color: #e0e0e0;
+}
+
+/* 日付セル (<td>) のスタイル */
+#calendar td {
+    border: 1px solid #ddd;
+    height: 100px;
+    padding: 0;
+    vertical-align: top;
+    position: relative;
+}
+
+/* 日付番号のスタイル */
+.day-number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #1d3557;
+}
+
+/* AM/PMスロットのコンテナ */
+.time-slots {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 25px;
+}
+
+/* 個々のAM/PMスロット */
+.slot {
+    flex: 1;
+    border-top: 1px solid #eee;
+    margin: 2px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    
+    /* 空き時間強調: 明るい白 */
+    background-color: white; 
+    transition: background-color 0.1s;
+}
+
+.slot:first-child {
+    border-top: none;
+}
+
+.slot:hover {
+    background-color: #f0f0f0;
+}
+
+/* 選択中のスロット（ドラッグで伸ばしている領域） */
+.slot.selected {
+    background-color: #dbeafe; /* 薄い青で選択を示す */
+    box-shadow: inset 0 0 0 2px rgba(59,130,246,0.25);
+}
+
+/* 予定ブロック (アースカラー) */
+.schedule-block {
+    /* スロット内で縦に積み、個々のブロックがスロット高さを均等に分配する */
+    background-color: #6d50f0; /* アースカラー (ブラウン系) */
+    color: rgb(0, 0, 0);
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    cursor: pointer;
+    position: relative;
+    margin: 2px 6px;
+    border-radius: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* flex で均等に高さを割り当てる */
+    flex: 1 1 0;
+}
+
+/* スロット自体を flex コンテナにして中の .schedule-block を縦に並べる */
+.slot {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0 6px 0; /* 上端に日付番号があるので極端な padding を避ける */
+}
+
+/* ひとつだけのときは余白を取り除き、見た目を大きく維持 */
+.slot > .schedule-block:only-child {
+    margin: 0;
+    flex: 1 1 0; /* 単一でも高さを埋める */
+}
+
+/* 削除ボタン (ワンクリック) */
+.delete-btn {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background: #e63946;
+    color: white;
+    border: none;
+    padding: 2px 5px;
+    font-size: 0.8em;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    border-radius: 0 3px 0 3px;
+}
+
+.delete-btn:hover {
+    opacity: 1.0;
+}
+
+/* 今日の日付の強調 */
+#calendar .today {
+    background-color: #f0f8ff;
+    border: 2px solid #6d50f0; /* ← 枠線の色を赤系に変更 */
+    box-sizing: border-box;
+}
+.today .day-number {
+    color: #e63946;
+}
+
+/* 日付番号のみ色を変更（左端=日曜、右端=土曜） */
+#calendar tbody tr td:nth-child(1) .day-number {
+    color: #d9480f; /* 日曜の文字色（オレンジ系） */
+}
+#calendar tbody tr td:nth-child(7) .day-number {
+    color: #2b6cb0; /* 土曜の文字色（青系） */
+}
+
+/* 今日の強調が優先されるようにしたい場合（例: today の色で上書き） */
+#calendar tbody tr td.today .day-number {
+    color: #6d50f0; /* 今日の日付番号色（必要に応じて変更） */
+}
+
+/* --- ポップアップ（モーダル）のスタイル --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* テンプレートカードのコンテナ */
+#templateContainer {
+    display: grid;
+    /* カードの大きさに合わせて自動で列を調整 */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* テンプレートカード (カレンダーのスロットサイズに合わせる) */
+.template-card {
+    height: 60px; /* 高さを固定 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+
+    /* 追加: 削除ボタンを配置するため相対位置を指定 */
+    position: relative;
+}
+
+.template-card:hover {
+    background-color: #f0f8ff; 
+    border-color: #457b9d;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.template-card h4 {
+    margin: 0;
+    font-size: 0.9em;
+    color: #1d3557;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    padding: 0 5px;
+}
+
+/* 追加: テンプレートカードの右上に表示する削除ボタン */
+.template-delete-btn {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    background: #e63946;
+    color: white;
+    border: none;
+    padding: 2px 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    border-radius: 3px;
+    line-height: 1;
+    opacity: 0.9;
+}
+.template-delete-btn:hover {
+    opacity: 1;
+}
+
+/* 編集モーダル */
+#editInput {
+    width: 95%;
+    height: 80px;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+#saveEdit {
+    background-color: #457b9d;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.schedule-editor {
+    width: 90%;
+    max-width: 900px;
+    margin: 15px 0;
+    padding: 10px 20px;
+    background-color: #e3f2fd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* テンプレートごとの色指定例 */
+.template-quick_meeting { background-color: #ffe5e5; }
+.template-deep_work     { background-color: #e5f7ff; }
+.template-check_email   { background-color: #e5ffe5; }
+.template-short_break   { background-color: #fffbe5; }
+.template-client_call   { background-color: #f0e5ff; }
+
+/* 今日を含む週だけサイズを大きくする */
+#calendar tr.current-week td {
+    height: 140px; /* 通常より大きく */
+    background-color: #ffffff; /* 目立たせる色（任意） */
+}
+#calendar tr.current-week .day-number {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.current-time {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    font-size: 1.1em;
+    color: #457b9d;
+    background: #f8f9fa;
+    padding: 6px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    z-index: 10;
+}
